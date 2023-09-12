@@ -18,6 +18,7 @@ void moveBackward();
 void moveRight();
 void moveLeft();
 void stop();
+void printData();
 
 void setup() {
   //Setup the PSX library
@@ -34,51 +35,50 @@ void setup() {
 }
 
 void loop() {
+  //moveForward();
+  //moveBackward();
+  //moveRight();
+  //moveLeft();
   PSXerror = psx.read(PSXdata);
-  if(PSXerror == PSXERROR_SUCCESS) {
-      if(PSXdata.buttons & PSXBTN_UP) {
-        Serial.println("Forward");
-        moveForward();
-      }
-      if(PSXdata.buttons & PSXBTN_DOWN) {
-        Serial.println("Backward");
-        moveBackward();
-      }
-      if(PSXdata.buttons & PSXBTN_RIGHT) {
-        Serial.println("Right");
-        moveRight();
-      }
-      if(PSXdata.buttons & PSXBTN_LEFT) {
-        Serial.println("LEFT");
-        moveLeft();
-      }
-      else{
-        Serial.println("STOP");
-        stop();
-      }
-  } else {
-    Serial.print("No success reading data. Check connections and timing.");
+  printData();
+  if(PSXdata.JoyRightY > 200){
+    digitalWrite(3, HIGH);
+  }
+  else if(PSXdata.JoyRightY < 50){
+    digitalWrite(4, HIGH);
+  }
+  else{
+    stop();
+  }
+  if(PSXdata.JoyLeftY > 200){
+    digitalWrite(5, HIGH);
+  }
+  else if(PSXdata.JoyLeftY < 50){
+    digitalWrite(2, HIGH);
+  }
+  else{
+    stop();
   }
 }
 
 void moveForward(){
   digitalWrite(2, HIGH);
-  digitalWrite(5, HIGH);
+  digitalWrite(4, HIGH);
 }
 
 void moveBackward(){
   digitalWrite(3, HIGH);
-  digitalWrite(4, HIGH);
+  digitalWrite(5, HIGH);
 }
 
 void moveRight(){
   digitalWrite(2, HIGH);
-  digitalWrite(4, HIGH);
+  digitalWrite(3, HIGH);
 }
 
 void moveLeft(){
+  digitalWrite(4, HIGH);
   digitalWrite(5, HIGH);
-  digitalWrite(3, HIGH);
 }
 
 void stop(){
@@ -86,4 +86,14 @@ void stop(){
   digitalWrite(3, LOW);
   digitalWrite(4, LOW);
   digitalWrite(5, LOW);
+}
+
+void printData(){
+  Serial.print(PSXdata.JoyLeftX);
+  Serial.print("   ");
+  Serial.print(PSXdata.JoyRightX);
+  Serial.print("   ");
+  Serial.print(PSXdata.JoyLeftY);
+  Serial.print("   ");
+  Serial.println(PSXdata.JoyRightY);
 }
