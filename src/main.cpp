@@ -1,10 +1,19 @@
+/*
+    Name:         MiniBot_Control
+    Descr:        Basic programm for control motors with joysticks
+    Version:      0.1   
+    Author:       Paralarnax
+    Date:         12.09.2023     
+    Annotation:   This programm was developed for prototype of MiniBot,
+                  which have l298n driver (bad decision). We will replace
+                  this driver in production version and also add basic servo
+                  gripper and line sensors.
+*/
+
+//Add main lidraries and configuration file
 #include <Arduino.h>
 #include <PSX.h>
-
-#define dataPin   10 
-#define cmdPin    11  
-#define attPin    12  
-#define clockPin  13 
+#include <config.h>
 
 // Static instantiation of the library
 PSX psx;
@@ -13,10 +22,7 @@ PSX psx;
 PSX::PSXDATA PSXdata;
 int PSXerror;
 
-void moveForward();
-void moveBackward();
-void moveRight();
-void moveLeft();
+//Declaration prototypes of stop and debugging functions
 void stop();
 void printData();
 
@@ -24,63 +30,42 @@ void setup() {
   //Setup the PSX library
   psx.setupPins(dataPin, cmdPin, attPin, clockPin, 10);
   psx.config(PSXMODE_ANALOG);
-  
-  pinMode(2, OUTPUT);
-  pinMode(3, OUTPUT);
-  pinMode(4, OUTPUT);
-  pinMode(5, OUTPUT);
-
-  // Setup serial communication
+  //Motor pins as output
+  pinMode(LeftMotorB,  OUTPUT);
+  pinMode(LeftMotorF,  OUTPUT);
+  pinMode(RightMotorB, OUTPUT);
+  pinMode(RightMotorF, OUTPUT);
+  //Setup serial communication
   Serial.begin(9600);
 }
 
 void loop() {
-  //moveForward();
-  //moveBackward();
-  //moveRight();
-  //moveLeft();
+  //Read data from PS2 controller
   PSXerror = psx.read(PSXdata);
-  printData();
+  //printData();
+  //Right motor control logic
   if(PSXdata.JoyRightY > 200){
-    digitalWrite(3, HIGH);
+    digitalWrite(RightMotorB, HIGH);
   }
   else if(PSXdata.JoyRightY < 50){
-    digitalWrite(4, HIGH);
+    digitalWrite(RightMotorF, HIGH);
   }
   else{
     stop();
   }
+  //Left motor control logic
   if(PSXdata.JoyLeftY > 200){
-    digitalWrite(5, HIGH);
+    digitalWrite(LeftMotorB, HIGH);
   }
   else if(PSXdata.JoyLeftY < 50){
-    digitalWrite(2, HIGH);
+    digitalWrite(LeftMotorF, HIGH);
   }
   else{
     stop();
   }
 }
 
-void moveForward(){
-  digitalWrite(2, HIGH);
-  digitalWrite(4, HIGH);
-}
-
-void moveBackward(){
-  digitalWrite(3, HIGH);
-  digitalWrite(5, HIGH);
-}
-
-void moveRight(){
-  digitalWrite(2, HIGH);
-  digitalWrite(3, HIGH);
-}
-
-void moveLeft(){
-  digitalWrite(4, HIGH);
-  digitalWrite(5, HIGH);
-}
-
+//Function to stop all motors
 void stop(){
   digitalWrite(2, LOW);
   digitalWrite(3, LOW);
@@ -88,6 +73,7 @@ void stop(){
   digitalWrite(5, LOW);
 }
 
+//Debugging function to check all PS2 controller joystick channels
 void printData(){
   Serial.print(PSXdata.JoyLeftX);
   Serial.print("   ");
