@@ -1,9 +1,11 @@
-#define LeftMotorF  2
-#define LeftMotorB  5
-#define RightMotorF 4
+//L298N motor driver pins
+#define LeftMotorF  6
+#define LeftMotorB  9
+#define RightMotorF 5
 #define RightMotorB 3
 
-#define dataPin   10 
-#define cmdPin    11  
-#define attPin    12  
-#define clockPin  13 
+//PS2 controller receiver data pins
+#define dataPin     A1
+#define cmdPin      A0
+#define attPin      2
+#define clockPin    4 

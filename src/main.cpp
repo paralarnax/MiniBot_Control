@@ -22,9 +22,8 @@ PSX psx;
 PSX::PSXDATA PSXdata;
 int PSXerror;
 
-//Declaration prototypes of stop and debugging functions
-void stop();
-void printData();
+byte motorSpeed[] = {0, 0, 0, 0};
+byte motorSlowdown = 0;
 
 void setup() {
   //Setup the PSX library
@@ -39,47 +38,102 @@ void setup() {
   Serial.begin(9600);
 }
 
-void loop() {
+void speedControl(){
   //Read data from PS2 controller
   PSXerror = psx.read(PSXdata);
-  //printData();
-  //Right motor control logic
-  if(PSXdata.JoyRightY > 200){
-    digitalWrite(RightMotorB, HIGH);
+  if(PSXdata.buttons & PSXBTN_R2) {
+    if(PSXdata.JoyLeftX >= 128){
+      motorSlowdown = map(PSXdata.JoyLeftX, 128, 255, 1, 127);
+      motorSpeed[1] = 255;
+      motorSpeed[3] = 0;
+      motorSpeed[2] = (motorSlowdown * 2);
+    }
+    if(PSXdata.JoyLeftX <= 126){
+      motorSlowdown = map(PSXdata.JoyLeftX, 0, 126, 127, 1);
+      motorSpeed[1] = 0;
+      motorSpeed[3] = 255;
+      motorSpeed[0] = (motorSlowdown * 2);
+    }
+    if(PSXdata.JoyLeftX == 127){
+      motorSpeed[1] = 255;
+      motorSpeed[3] = 255;
+      motorSpeed[2] = 0;
+      motorSpeed[0] = 0;
+      motorSlowdown = 0;
+    }
   }
-  else if(PSXdata.JoyRightY < 50){
-    digitalWrite(RightMotorF, HIGH);
+  else if(PSXdata.buttons & PSXBTN_L2) {
+    if(PSXdata.JoyLeftX >= 128){
+      motorSlowdown = map(PSXdata.JoyLeftX, 128, 255, 1, 127);
+      motorSpeed[2] = 0;
+      motorSpeed[0] = 255;
+      motorSpeed[3] = (motorSlowdown * 2);
+    }
+    if(PSXdata.JoyLeftX <= 126){
+      motorSlowdown = map(PSXdata.JoyLeftX, 0, 126, 127, 1);
+      motorSpeed[2] = 255;
+      motorSpeed[0] = 0;
+      motorSpeed[1] = (motorSlowdown * 2);
+    }
+    if(PSXdata.JoyLeftX == 127){
+      motorSpeed[1] = 0;
+      motorSpeed[3] = 0;
+      motorSpeed[2] = 255;
+      motorSpeed[0] = 255;
+      motorSlowdown = 0;
+    }
   }
   else{
-    stop();
-  }
-  //Left motor control logic
-  if(PSXdata.JoyLeftY > 200){
-    digitalWrite(LeftMotorB, HIGH);
-  }
-  else if(PSXdata.JoyLeftY < 50){
-    digitalWrite(LeftMotorF, HIGH);
-  }
-  else{
-    stop();
+    motorSpeed[0] = 0;
+    motorSpeed[1] = 0;
+    motorSpeed[2] = 0;
+    motorSpeed[3] = 0;
+    motorSlowdown = 0;
   }
 }
 
 //Function to stop all motors
-void stop(){
-  digitalWrite(2, LOW);
-  digitalWrite(3, LOW);
-  digitalWrite(4, LOW);
-  digitalWrite(5, LOW);
+void motorSetSpeed(){
+  analogWrite(LeftMotorB, motorSpeed[0]);
+  analogWrite(LeftMotorF, motorSpeed[1]);
+  analogWrite(RightMotorB, motorSpeed[2]);
+  analogWrite(RightMotorF, motorSpeed[3]);
 }
 
 //Debugging function to check all PS2 controller joystick channels
-void printData(){
+void printCyberdeck(){
   Serial.print(PSXdata.JoyLeftX);
   Serial.print("   ");
   Serial.print(PSXdata.JoyRightX);
   Serial.print("   ");
   Serial.print(PSXdata.JoyLeftY);
   Serial.print("   ");
-  Serial.println(PSXdata.JoyRightY);
+  Serial.print(PSXdata.JoyRightY);
+  Serial.print("   ");
+  if(PSXdata.buttons & PSXBTN_R2) {
+    Serial.print("R2, ");
+  }
+  if(PSXdata.buttons & PSXBTN_L2) {
+    Serial.print("L2, ");
+  }
+  Serial.println("");
+}
+
+void printMotorData(){
+  Serial.print(motorSpeed[0]);
+  Serial.print("   ");
+  Serial.print(motorSpeed[1]);
+  Serial.print("   ");
+  Serial.print(motorSpeed[2]);
+  Serial.print("   ");
+  Serial.print(motorSpeed[3]);
+  Serial.print("   ");
+  Serial.print(motorSlowdown);
+}
+
+void loop() {
+  speedControl();
+  //printCyberdeck();
+  printMotorData();
+  motorSetSpeed();
 }
